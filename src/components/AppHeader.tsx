@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { auth, signOut } from "@/auth";
 import { db } from "@/db";
 import { userStats } from "@/db/schema";
+import { formatNumber } from "@/lib/format";
 
 export async function AppHeader() {
   const session = await auth();
@@ -48,7 +49,7 @@ export async function AppHeader() {
           </Link>
           {session?.user && (
             <span className="rounded-full bg-teal/10 px-2.5 py-1 font-display text-xs font-bold text-teal">
-              {xp.toLocaleString()} XP
+              {formatNumber(xp)} XP
             </span>
           )}
           {session?.user?.isAdmin && (

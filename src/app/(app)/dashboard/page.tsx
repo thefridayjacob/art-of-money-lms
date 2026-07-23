@@ -10,6 +10,7 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import { auth } from "@/auth";
 import { getDashboardData } from "@/lib/stats";
+import { formatNumber } from "@/lib/format";
 import { ProgressRing } from "@/components/ProgressRing";
 import { BadgeShelf } from "@/components/dashboard/BadgeShelf";
 import { StatCard } from "@/components/dashboard/StatCard";
@@ -52,7 +53,7 @@ export default async function DashboardPage() {
           </ProgressRing>
           <div className="min-w-0">
             <p className="font-display text-2xl font-extrabold text-ink">
-              {d.xp.toLocaleString()}{" "}
+              {formatNumber(d.xp)}{" "}
               <span className="text-base font-bold text-muted">XP</span>
             </p>
             <p className="prose-money text-sm text-muted">
