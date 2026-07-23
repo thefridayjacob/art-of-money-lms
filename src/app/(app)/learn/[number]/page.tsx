@@ -3,6 +3,10 @@ import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getLesson, getLessonNav, isLessonUnlocked } from "@/lib/course";
 import { Markdown } from "@/components/Markdown";
+import { MasterToggle } from "@/components/interactive/MasterToggle";
+import { HomeworkPanel } from "@/components/interactive/HomeworkPanel";
+import { TeachPanel } from "@/components/interactive/TeachPanel";
+import { CompleteLessonButton } from "@/components/interactive/CompleteLessonButton";
 
 type Params = { number: string };
 
@@ -105,12 +109,17 @@ export default async function LessonPage({
                     <div className="min-w-0 flex-1">
                       <h3 className="font-display text-base font-bold text-ink">
                         {m.title}
-                        {mastered && (
-                          <span className="ml-2 text-sm text-teal">✓ mastered</span>
-                        )}
                       </h3>
                       <div className="mt-1">
                         <Markdown>{m.body}</Markdown>
+                      </div>
+                      <div className="mt-3">
+                        <MasterToggle
+                          modelId={m.id}
+                          lessonId={lesson.id}
+                          lessonNumber={lesson.number}
+                          initialMastered={mastered}
+                        />
                       </div>
                     </div>
                   </div>
@@ -137,7 +146,11 @@ export default async function LessonPage({
           <SectionHeader emoji="📺" title="Watch" />
           <ul className="mt-3 space-y-2.5">
             {watch.map((r) => (
-              <ResourceItem key={r.id} r={r} />
+              <ResourceItem
+                key={r.id}
+                r={r}
+                opened={lesson.userState.openedResources.has(r.id)}
+              />
             ))}
           </ul>
         </Section>
@@ -149,7 +162,11 @@ export default async function LessonPage({
           <SectionHeader emoji="📚" title="Read" />
           <ul className="mt-3 space-y-2.5">
             {read.map((r) => (
-              <ResourceItem key={r.id} r={r} />
+              <ResourceItem
+                key={r.id}
+                r={r}
+                opened={lesson.userState.openedResources.has(r.id)}
+              />
             ))}
           </ul>
         </Section>
@@ -159,11 +176,29 @@ export default async function LessonPage({
       {lesson.homework && (
         <Section>
           <SectionHeader emoji="✍️" title="Homework" />
-          <div className="mt-3 rounded-2xl border border-dashed border-teal/40 bg-teal/[0.04] p-5">
-            <Markdown>{lesson.homework}</Markdown>
+          <div className="mt-3">
+            <HomeworkPanel
+              lessonId={lesson.id}
+              lessonNumber={lesson.number}
+              homework={lesson.homework}
+              initialDone={lesson.userState.homeworkDone}
+              initialNotes={lesson.userState.homeworkNotes}
+            />
           </div>
         </Section>
       )}
+
+      {/* Teach one person */}
+      <Section>
+        <SectionHeader emoji="🗣️" title="Each one, teach one" />
+        <div className="mt-3">
+          <TeachPanel
+            lessonId={lesson.id}
+            lessonNumber={lesson.number}
+            initialTaught={lesson.userState.taught}
+          />
+        </div>
+      </Section>
 
       {/* Recap */}
       {lesson.recap && (
@@ -176,6 +211,14 @@ export default async function LessonPage({
           </div>
         </Section>
       )}
+
+      {/* Complete */}
+      <CompleteLessonButton
+        lessonId={lesson.id}
+        lessonNumber={lesson.number}
+        initialCompleted={lesson.userState.status === "completed"}
+        next={nav.next}
+      />
 
       {/* Nav */}
       <nav className="mt-12 flex items-center justify-between gap-4 border-t border-border pt-6">
@@ -224,6 +267,7 @@ function SectionHeader({ emoji, title }: { emoji: string; title: string }) {
 
 function ResourceItem({
   r,
+  opened,
 }: {
   r: {
     id: string;
@@ -232,9 +276,16 @@ function ResourceItem({
     author: string | null;
     note: string | null;
   };
+  opened: boolean;
 }) {
   const content = (
-    <div className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4 transition hover:border-teal/50 hover:shadow-sm">
+    <div
+      className={`flex items-start gap-3 rounded-2xl border p-4 transition hover:shadow-sm ${
+        opened
+          ? "border-teal/40 bg-teal/[0.04]"
+          : "border-border bg-card hover:border-teal/50"
+      }`}
+    >
       <div className="min-w-0 flex-1">
         <p className="font-display text-sm font-semibold text-ink">
           {r.title}
@@ -246,16 +297,17 @@ function ResourceItem({
       </div>
       {r.url && (
         <span className="shrink-0 font-display text-xs font-semibold text-teal">
-          Open ↗
+          {opened ? "Opened ✓" : "Open ↗"}
         </span>
       )}
     </div>
   );
 
   if (r.url) {
+    // Route through /go/[id] so the open is tracked (and awards XP once).
     return (
       <li>
-        <a href={r.url} target="_blank" rel="noopener noreferrer">
+        <a href={`/go/${r.id}`} target="_blank" rel="noopener noreferrer">
           {content}
         </a>
       </li>
