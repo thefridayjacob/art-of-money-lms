@@ -8,11 +8,12 @@ import { readFileSync } from "node:fs";
 
 config({ path: ".env.local" });
 
-const { db, schema } = await import("../src/db");
-const { parseCourse } = await import("../src/db/parse-course");
-const { BADGES } = await import("../src/db/badges");
-
 async function main() {
+  // Imported inside main() so dotenv loads before db/index.ts reads env.
+  const { db, schema } = await import("../src/db");
+  const { parseCourse } = await import("../src/db/parse-course");
+  const { BADGES } = await import("../src/db/badges");
+
   const md = readFileSync("content/course.md", "utf8");
   const parts = parseCourse(md);
 
