@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { motion } from "motion/react";
 import { toggleTeach } from "@/lib/progress-actions";
 import { XpBurst, useBurst } from "./XpBurst";
+import { useCelebrate } from "./BadgeCelebration";
 
 export function TeachPanel({
   lessonId,
@@ -18,12 +19,14 @@ export function TeachPanel({
   const [who, setWho] = useState("");
   const [pending, start] = useTransition();
   const burst = useBurst();
+  const celebrate = useCelebrate();
 
   const onToggle = () =>
     start(async () => {
       const res = await toggleTeach(lessonId, who, lessonNumber);
       setTaught(res.taught);
       burst.fire(res.xp);
+      celebrate(res.newBadges);
     });
 
   return (

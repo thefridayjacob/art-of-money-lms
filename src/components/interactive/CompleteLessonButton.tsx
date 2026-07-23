@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { completeLesson } from "@/lib/progress-actions";
 import { XpBurst, useBurst } from "./XpBurst";
+import { useCelebrate } from "./BadgeCelebration";
 
 export function CompleteLessonButton({
   lessonId,
@@ -20,12 +21,14 @@ export function CompleteLessonButton({
   const [completed, setCompleted] = useState(initialCompleted);
   const [pending, start] = useTransition();
   const burst = useBurst();
+  const celebrate = useCelebrate();
 
   const onComplete = () =>
     start(async () => {
       const res = await completeLesson(lessonId, lessonNumber);
       setCompleted(true);
       burst.fire(res.xpAwarded);
+      celebrate(res.newBadges);
     });
 
   return (

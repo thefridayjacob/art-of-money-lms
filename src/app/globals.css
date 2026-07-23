@@ -58,6 +58,30 @@ body {
   line-height: 1.7;
 }
 
+/* Custom easing curves (default CSS eases are too weak) */
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+/* Press feedback for any pressable element */
+.press {
+  transition: transform 160ms var(--ease-out);
+}
+.press:active {
+  transform: scale(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* The signature "peel" pill */
 .peel {
   display: inline-flex;

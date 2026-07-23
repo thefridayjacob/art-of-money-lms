@@ -5,6 +5,7 @@ import { motion } from "motion/react";
 import { setHomework } from "@/lib/progress-actions";
 import { Markdown } from "@/components/Markdown";
 import { XpBurst, useBurst } from "./XpBurst";
+import { useCelebrate } from "./BadgeCelebration";
 
 export function HomeworkPanel({
   lessonId,
@@ -24,12 +25,14 @@ export function HomeworkPanel({
   const [pending, start] = useTransition();
   const [saved, setSaved] = useState(false);
   const burst = useBurst();
+  const celebrate = useCelebrate();
 
   const persist = (nextDone: boolean) =>
     start(async () => {
       const res = await setHomework(lessonId, nextDone, notes, lessonNumber);
       setDone(res.done);
       burst.fire(res.xp);
+      celebrate(res.newBadges);
       setSaved(true);
       setTimeout(() => setSaved(false), 1600);
     });

@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { motion } from "motion/react";
 import { toggleModelMastery } from "@/lib/progress-actions";
 import { XpBurst, useBurst } from "./XpBurst";
+import { useCelebrate } from "./BadgeCelebration";
 
 export function MasterToggle({
   modelId,
@@ -19,12 +20,14 @@ export function MasterToggle({
   const [mastered, setMastered] = useState(initialMastered);
   const [pending, start] = useTransition();
   const burst = useBurst();
+  const celebrate = useCelebrate();
 
   const onClick = () =>
     start(async () => {
       const res = await toggleModelMastery(modelId, lessonId, lessonNumber);
       setMastered(res.mastered);
       burst.fire(res.xp);
+      celebrate(res.newBadges);
     });
 
   return (

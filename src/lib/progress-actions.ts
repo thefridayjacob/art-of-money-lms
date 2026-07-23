@@ -11,6 +11,7 @@ import {
   teachLog,
 } from "@/db/schema";
 import { awardXpOnce, XP } from "@/lib/xp";
+import { checkAndAwardBadges } from "@/lib/badges-engine";
 
 async function requireUser() {
   const session = await auth();
@@ -22,6 +23,8 @@ function revalidateLesson(lessonNumber: number) {
   revalidatePath(`/learn/${lessonNumber}`);
   revalidatePath("/learn");
   revalidatePath("/dashboard");
+  revalidatePath("/deck");
+  revalidatePath("/badges");
 }
 
 /** Mark a lesson as at least started (idempotent, no XP). */
@@ -63,10 +66,13 @@ export async function toggleModelMastery(
     xpAwarded = await awardXpOnce(userId, "model_mastered", modelId);
   }
 
+  const newBadges =
+    existing.length === 0 ? await checkAndAwardBadges(userId) : [];
   revalidateLesson(lessonNumber);
   return {
     mastered: existing.length === 0,
     xp: xpAwarded ? XP.model_mastered : 0,
+    newBadges,
   };
 }
 
@@ -98,8 +104,9 @@ export async function setHomework(
     ? await awardXpOnce(userId, "homework_done", lessonId)
     : false;
 
+  const newBadges = done ? await checkAndAwardBadges(userId) : [];
   revalidateLesson(lessonNumber);
-  return { done, xp: xpAwarded ? XP.homework_done : 0 };
+  return { done, xp: xpAwarded ? XP.homework_done : 0, newBadges };
 }
 
 /** Log (or clear) "taught one person" for a lesson. Awards XP once. */
@@ -131,8 +138,14 @@ export async function toggleTeach(
     xpAwarded = await awardXpOnce(userId, "taught_someone", lessonId);
   }
 
+  const newBadges =
+    existing.length === 0 ? await checkAndAwardBadges(userId) : [];
   revalidateLesson(lessonNumber);
-  return { taught: existing.length === 0, xp: xpAwarded ? XP.taught_someone : 0 };
+  return {
+    taught: existing.length === 0,
+    xp: xpAwarded ? XP.taught_someone : 0,
+    newBadges,
+  };
 }
 
 /** Mark a lesson complete. Unlocks the next lesson; awards XP once. */
@@ -155,6 +168,11 @@ export async function completeLesson(lessonId: string, lessonNumber: number) {
 
   const awarded = await awardXpOnce(userId, "lesson_complete", lessonId);
 
+  const newBadges = await checkAndAwardBadges(userId);
   revalidateLesson(lessonNumber);
-  return { completed: true, xpAwarded: awarded ? XP.lesson_complete : 0 };
+  return {
+    completed: true,
+    xpAwarded: awarded ? XP.lesson_complete : 0,
+    newBadges,
+  };
 }
