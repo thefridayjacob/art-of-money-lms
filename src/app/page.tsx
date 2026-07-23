@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 const TAGS = [
   { label: "15 lessons", color: "var(--color-teal)", rotate: -4 },
   { label: "76 models", color: "var(--color-pink)", rotate: 3 },
@@ -38,8 +40,23 @@ export default function Home() {
         ))}
       </div>
 
-      <p className="mt-14 font-display text-sm text-chalk/40">
-        Learning platform in the works. Everything ships on Friday.
+      <div className="mt-12 flex flex-col items-center gap-3 sm:flex-row">
+        <Link
+          href="/signup"
+          className="press rounded-full bg-teal px-7 py-3.5 font-display font-semibold text-white shadow-lg shadow-teal/20 transition hover:bg-teal-bright"
+        >
+          Start free →
+        </Link>
+        <Link
+          href="/login"
+          className="press rounded-full border border-white/15 px-7 py-3.5 font-display font-semibold text-chalk transition hover:bg-white/5"
+        >
+          Sign in
+        </Link>
+      </div>
+
+      <p className="mt-10 font-display text-sm text-chalk/40">
+        Free, forever. 15 lessons · 76 models.
       </p>
     </main>
   );

@@ -61,6 +61,7 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   emailVerified: timestamp("email_verified", { mode: "date" }),
   image: text("image"),
+  passwordHash: text("password_hash"),
   // App-specific
   displayName: text("display_name"),
   isAdmin: boolean("is_admin").notNull().default(false),

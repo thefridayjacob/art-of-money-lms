@@ -1,18 +1,13 @@
 import NextAuth from "next-auth";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
-import Resend from "next-auth/providers/resend";
+import Google from "next-auth/providers/google";
+import Credentials from "next-auth/providers/credentials";
+import { eq } from "drizzle-orm";
+import bcrypt from "bcryptjs";
 import { db } from "@/db";
-import {
-  users,
-  accounts,
-  sessions,
-  verificationTokens,
-} from "@/db/schema";
-import { magicLinkEmail } from "@/lib/email-template";
+import { users, accounts, sessions, verificationTokens } from "@/db/schema";
 
-const RESEND_KEY = process.env.AUTH_RESEND_KEY;
-const EMAIL_FROM =
-  process.env.EMAIL_FROM ?? "The Art of Money <onboarding@resend.dev>";
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL?.toLowerCase();
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: DrizzleAdapter(db, {
@@ -21,59 +16,65 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     sessionsTable: sessions,
     verificationTokensTable: verificationTokens,
   }),
-  session: { strategy: "database" },
-  trustHost: true, // required on Netlify (non-Vercel host)
-  pages: {
-    signIn: "/login",
-    verifyRequest: "/login/check-email",
-    error: "/login",
-  },
+  // Credentials (password) requires JWT sessions. The adapter still persists
+  // users + OAuth accounts; only the session itself lives in a signed cookie.
+  session: { strategy: "jwt" },
+  trustHost: true,
+  pages: { signIn: "/login", error: "/login" },
   providers: [
-    Resend({
-      apiKey: RESEND_KEY ?? "dev-no-key",
-      from: EMAIL_FROM,
-      async sendVerificationRequest({ identifier: email, url }) {
-        // In development, always print the link so we can test locally.
-        if (process.env.NODE_ENV !== "production") {
-          console.log(`\n\n🔑  MAGIC LINK for ${email}\n${url}\n\n`);
-        }
-        // No Resend key → dev-only flow, nothing to send.
-        if (!RESEND_KEY) return;
+    Google({
+      // Link Google to an existing account with the same (verified) email.
+      allowDangerousEmailAccountLinking: true,
+    }),
+    Credentials({
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      authorize: async (creds) => {
+        const email = String(creds?.email ?? "").trim().toLowerCase();
+        const password = String(creds?.password ?? "");
+        if (!email || !password) return null;
 
-        const res = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${RESEND_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            from: EMAIL_FROM,
-            to: email,
-            subject: "Your link to The Art of Money",
-            html: magicLinkEmail(url),
-          }),
+        const user = await db.query.users.findFirst({
+          where: eq(users.email, email),
         });
+        if (!user?.passwordHash) return null;
 
-        if (!res.ok) {
-          throw new Error(`Resend error: ${res.status} ${await res.text()}`);
-        }
+        const ok = await bcrypt.compare(password, user.passwordHash);
+        if (!ok) return null;
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          image: user.image,
+          isAdmin: user.isAdmin,
+          displayName: user.displayName,
+        };
       },
     }),
   ],
   callbacks: {
-    // Expose id + isAdmin on the session (database-session strategy passes
-    // the full adapter user row here).
-    session({ session, user }) {
-      if (session.user) {
-        const dbIsAdmin = (user as { isAdmin?: boolean }).isAdmin ?? false;
-        session.user.id = user.id;
-        session.user.isAdmin =
-          dbIsAdmin ||
-          (!!process.env.ADMIN_EMAIL &&
-            session.user.email?.toLowerCase() ===
-              process.env.ADMIN_EMAIL.toLowerCase());
-        session.user.displayName =
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.isAdmin =
+          (user as { isAdmin?: boolean }).isAdmin ?? false;
+        token.displayName =
           (user as { displayName?: string | null }).displayName ?? null;
+      }
+      // Owner is always admin, regardless of provider.
+      if (ADMIN_EMAIL && token.email?.toLowerCase() === ADMIN_EMAIL) {
+        token.isAdmin = true;
+      }
+      return token;
+    },
+    session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.id as string;
+        session.user.isAdmin = Boolean(token.isAdmin);
+        session.user.displayName = (token.displayName as string | null) ?? null;
       }
       return session;
     },
