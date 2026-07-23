@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Lock, Check, CaretRight } from "@phosphor-icons/react/dist/ssr";
 import { auth } from "@/auth";
 import { getCourseMap, type CourseMapLesson } from "@/lib/course";
 
@@ -18,8 +19,8 @@ export default async function LearnPage() {
   const pct = Math.round((done / allLessons.length) * 100);
 
   return (
-    <main className="mx-auto max-w-4xl px-5 py-10">
-      <header className="mb-10">
+    <main className="mx-auto max-w-4xl px-4 py-8 sm:px-5 sm:py-10">
+      <header className="mb-8 sm:mb-10">
         <span
           className="peel"
           style={{ backgroundColor: "var(--color-teal)" }}
@@ -93,7 +94,13 @@ function LessonRow({ lesson }: { lesson: CourseMapLesson }) {
               : "bg-ink/10 text-muted"
         }`}
       >
-        {isCompleted ? "✓" : lesson.unlocked ? lesson.number : "🔒"}
+        {isCompleted ? (
+          <Check size={16} weight="bold" />
+        ) : lesson.unlocked ? (
+          lesson.number
+        ) : (
+          <Lock size={14} weight="fill" />
+        )}
       </div>
 
       <div className="min-w-0 flex-1">
@@ -111,11 +118,18 @@ function LessonRow({ lesson }: { lesson: CourseMapLesson }) {
         )}
       </div>
 
-      <div className="shrink-0 font-display text-xs text-muted">
-        {inProgress && (
-          <span className="mr-2 text-amber-ink">In progress</span>
+      <div className="flex shrink-0 items-center gap-2 font-display text-xs text-muted">
+        {inProgress && <span className="text-amber-ink">In progress</span>}
+        <span className="hidden sm:inline">
+          {lesson.modelCount > 0 && `${lesson.modelCount} models`}
+        </span>
+        {lesson.unlocked && (
+          <CaretRight
+            size={15}
+            weight="bold"
+            className="text-border transition group-hover:text-teal"
+          />
         )}
-        {lesson.modelCount > 0 && `${lesson.modelCount} models`}
       </div>
     </div>
   );

@@ -13,6 +13,7 @@ export function StatCard({
   color = "teal",
   pct,
   href,
+  icon,
 }: {
   label: string;
   done: number;
@@ -20,13 +21,21 @@ export function StatCard({
   color?: "teal" | "pink" | "amber";
   pct: number;
   href?: string;
+  icon?: React.ReactNode;
 }) {
   const inner = (
     <div className="h-full rounded-2xl border border-border bg-card p-4 transition hover:shadow-sm">
-      <p className="font-display text-2xl font-extrabold text-ink">
-        {done}
-        <span className="text-base font-semibold text-muted">/{total}</span>
-      </p>
+      <div className="flex items-start justify-between">
+        <p className="font-display text-2xl font-extrabold text-ink">
+          {done}
+          <span className="text-base font-semibold text-muted">/{total}</span>
+        </p>
+        {icon && (
+          <span style={{ color: COLORS[color] }} aria-hidden>
+            {icon}
+          </span>
+        )}
+      </div>
       <p className="font-display text-xs font-medium text-muted">{label}</p>
       <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-ink/10">
         <div

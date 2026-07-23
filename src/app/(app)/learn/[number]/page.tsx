@@ -1,5 +1,18 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import {
+  Brain,
+  CurrencyNgn,
+  Television,
+  BookOpen,
+  NotePencil,
+  UsersThree,
+  Lightning,
+  Lightbulb,
+  ArrowLeft,
+  CaretLeft,
+  CaretRight,
+} from "@phosphor-icons/react/dist/ssr";
 import { auth } from "@/auth";
 import { getLesson, getLessonNav, isLessonUnlocked } from "@/lib/course";
 import { Markdown } from "@/components/Markdown";
@@ -7,6 +20,8 @@ import { MasterToggle } from "@/components/interactive/MasterToggle";
 import { HomeworkPanel } from "@/components/interactive/HomeworkPanel";
 import { TeachPanel } from "@/components/interactive/TeachPanel";
 import { CompleteLessonButton } from "@/components/interactive/CompleteLessonButton";
+import { WatchCard } from "@/components/lesson/WatchCard";
+import { ReadCard } from "@/components/lesson/ReadCard";
 
 type Params = { number: string };
 
@@ -46,16 +61,15 @@ export default async function LessonPage({
   const read = lesson.resources.filter((r) => r.kind !== "watch");
 
   return (
-    <main className="mx-auto max-w-3xl px-5 py-10">
-      {/* Breadcrumb + title */}
+    <main className="mx-auto max-w-3xl px-4 py-8 sm:px-5 sm:py-10">
       <Link
         href="/learn"
-        className="font-display text-xs font-semibold text-muted transition hover:text-ink"
+        className="inline-flex items-center gap-1.5 font-display text-xs font-semibold text-muted transition hover:text-ink"
       >
-        ← All lessons
+        <ArrowLeft size={14} weight="bold" /> All lessons
       </Link>
 
-      <div className="mt-4 flex items-center gap-3">
+      <div className="mt-4 flex flex-wrap items-center gap-2.5">
         <span className="peel" style={{ backgroundColor: "var(--color-teal)" }}>
           Lesson {lesson.number}
         </span>
@@ -64,20 +78,26 @@ export default async function LessonPage({
         </span>
       </div>
 
-      <h1 className="mt-4 font-display text-4xl font-extrabold leading-[1.05] tracking-tight text-ink">
+      <h1 className="mt-4 font-display text-3xl font-extrabold leading-[1.06] tracking-tight text-ink sm:text-4xl">
         {lesson.title}
       </h1>
 
       {lesson.bigIdea && (
-        <div className="mt-6 rounded-2xl border-l-4 border-amber bg-amber/10 px-5 py-4">
-          <p className="font-display text-xs font-bold uppercase tracking-wide text-amber-ink">
-            The Big Idea
-          </p>
-          <p className="prose-money mt-1 text-lg text-ink">{lesson.bigIdea}</p>
+        <div className="mt-6 flex gap-3.5 rounded-2xl border-l-4 border-amber bg-amber/10 px-5 py-4">
+          <Lightbulb
+            size={22}
+            weight="duotone"
+            className="mt-0.5 shrink-0 text-amber-ink"
+          />
+          <div>
+            <p className="font-display text-xs font-bold uppercase tracking-wide text-amber-ink">
+              The Big Idea
+            </p>
+            <p className="prose-money mt-1 text-lg text-ink">{lesson.bigIdea}</p>
+          </div>
         </div>
       )}
 
-      {/* Start here */}
       {lesson.startHere && (
         <Section>
           <Markdown>{lesson.startHere}</Markdown>
@@ -87,23 +107,19 @@ export default async function LessonPage({
       {/* Models */}
       {lesson.models.length > 0 && (
         <Section>
-          <SectionHeader emoji="🧠" title="The Models" />
+          <SectionHeader icon={<Brain size={22} weight="duotone" />} title="The Models" />
           <div className="mt-4 space-y-4">
             {lesson.models.map((m) => {
               const mastered = lesson.userState.masteredModels.has(m.id);
               return (
                 <article
                   key={m.id}
-                  className={`rounded-2xl border p-5 transition ${
-                    mastered
-                      ? "border-teal/50 bg-teal/[0.04]"
-                      : "border-border bg-card"
+                  className={`rounded-2xl border p-4 transition sm:p-5 ${
+                    mastered ? "border-teal/50 bg-teal/[0.04]" : "border-border bg-card"
                   }`}
                 >
                   <div className="flex items-start gap-3">
-                    <span
-                      className="mt-0.5 flex h-7 shrink-0 items-center rounded-full bg-ink px-2.5 font-display text-xs font-bold text-white"
-                    >
+                    <span className="mt-0.5 flex h-7 shrink-0 items-center rounded-full bg-ink px-2.5 font-display text-xs font-bold text-white">
                       #{m.number}
                     </span>
                     <div className="min-w-0 flex-1">
@@ -133,8 +149,11 @@ export default async function LessonPage({
       {/* Nigeria Check */}
       {lesson.nigeriaCheck && (
         <Section>
-          <SectionHeader emoji="🇳🇬" title="Nigeria Check" />
-          <div className="mt-3 rounded-2xl border border-border bg-card p-5">
+          <SectionHeader
+            icon={<CurrencyNgn size={22} weight="duotone" />}
+            title="Nigeria Check"
+          />
+          <div className="mt-3 rounded-2xl border border-border bg-card p-4 sm:p-5">
             <Markdown>{lesson.nigeriaCheck}</Markdown>
           </div>
         </Section>
@@ -143,39 +162,45 @@ export default async function LessonPage({
       {/* Watch */}
       {watch.length > 0 && (
         <Section>
-          <SectionHeader emoji="📺" title="Watch" />
-          <ul className="mt-3 space-y-2.5">
+          <SectionHeader
+            icon={<Television size={22} weight="duotone" />}
+            title="Watch"
+          />
+          <div className="mt-4 grid grid-cols-1 gap-3.5 sm:grid-cols-2">
             {watch.map((r) => (
-              <ResourceItem
+              <WatchCard
                 key={r.id}
                 r={r}
                 opened={lesson.userState.openedResources.has(r.id)}
               />
             ))}
-          </ul>
+          </div>
         </Section>
       )}
 
       {/* Read */}
       {read.length > 0 && (
         <Section>
-          <SectionHeader emoji="📚" title="Read" />
-          <ul className="mt-3 space-y-2.5">
+          <SectionHeader icon={<BookOpen size={22} weight="duotone" />} title="Read" />
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
             {read.map((r) => (
-              <ResourceItem
+              <ReadCard
                 key={r.id}
                 r={r}
                 opened={lesson.userState.openedResources.has(r.id)}
               />
             ))}
-          </ul>
+          </div>
         </Section>
       )}
 
       {/* Homework */}
       {lesson.homework && (
         <Section>
-          <SectionHeader emoji="✍️" title="Homework" />
+          <SectionHeader
+            icon={<NotePencil size={22} weight="duotone" />}
+            title="Homework"
+          />
           <div className="mt-3">
             <HomeworkPanel
               lessonId={lesson.id}
@@ -190,7 +215,10 @@ export default async function LessonPage({
 
       {/* Teach one person */}
       <Section>
-        <SectionHeader emoji="🗣️" title="Each one, teach one" />
+        <SectionHeader
+          icon={<UsersThree size={22} weight="duotone" />}
+          title="Each one, teach one"
+        />
         <div className="mt-3">
           <TeachPanel
             lessonId={lesson.id}
@@ -204,15 +232,14 @@ export default async function LessonPage({
       {lesson.recap && (
         <Section>
           <div className="rounded-2xl bg-ink px-5 py-4">
-            <p className="font-display text-xs font-bold uppercase tracking-wide text-teal-bright">
-              ⚡ One-minute recap
+            <p className="flex items-center gap-1.5 font-display text-xs font-bold uppercase tracking-wide text-teal-bright">
+              <Lightning size={14} weight="fill" /> One-minute recap
             </p>
             <p className="prose-money mt-1 text-chalk">{lesson.recap}</p>
           </div>
         </Section>
       )}
 
-      {/* Complete */}
       <CompleteLessonButton
         lessonId={lesson.id}
         lessonNumber={lesson.number}
@@ -220,17 +247,20 @@ export default async function LessonPage({
         next={nav.next}
       />
 
-      {/* Nav */}
-      <nav className="mt-12 flex items-center justify-between gap-4 border-t border-border pt-6">
+      {/* Prev / Next */}
+      <nav className="mt-12 flex items-stretch justify-between gap-3 border-t border-border pt-6">
         {nav.prev ? (
           <Link
             href={`/learn/${nav.prev.number}`}
-            className="group flex-1 rounded-2xl border border-border p-4 transition hover:border-teal/50"
+            className="press flex flex-1 items-center gap-2 rounded-2xl border border-border p-4 transition hover:border-teal/50"
           >
-            <p className="font-display text-xs text-muted">← Previous</p>
-            <p className="font-display text-sm font-semibold text-ink">
-              {nav.prev.title}
-            </p>
+            <CaretLeft size={16} weight="bold" className="shrink-0 text-muted" />
+            <span className="min-w-0">
+              <span className="block font-display text-xs text-muted">Previous</span>
+              <span className="block truncate font-display text-sm font-semibold text-ink">
+                {nav.prev.title}
+              </span>
+            </span>
           </Link>
         ) : (
           <div className="flex-1" />
@@ -238,12 +268,15 @@ export default async function LessonPage({
         {nav.next ? (
           <Link
             href={`/learn/${nav.next.number}`}
-            className="group flex-1 rounded-2xl border border-border p-4 text-right transition hover:border-teal/50"
+            className="press flex flex-1 items-center justify-end gap-2 rounded-2xl border border-border p-4 text-right transition hover:border-teal/50"
           >
-            <p className="font-display text-xs text-muted">Next →</p>
-            <p className="font-display text-sm font-semibold text-ink">
-              {nav.next.title}
-            </p>
+            <span className="min-w-0">
+              <span className="block font-display text-xs text-muted">Next</span>
+              <span className="block truncate font-display text-sm font-semibold text-ink">
+                {nav.next.title}
+              </span>
+            </span>
+            <CaretRight size={16} weight="bold" className="shrink-0 text-muted" />
           </Link>
         ) : (
           <div className="flex-1" />
@@ -257,61 +290,19 @@ function Section({ children }: { children: React.ReactNode }) {
   return <section className="mt-8">{children}</section>;
 }
 
-function SectionHeader({ emoji, title }: { emoji: string; title: string }) {
+function SectionHeader({
+  icon,
+  title,
+}: {
+  icon: React.ReactNode;
+  title: string;
+}) {
   return (
     <h2 className="flex items-center gap-2 font-display text-xl font-extrabold text-ink">
-      <span aria-hidden>{emoji}</span> {title}
+      <span className="text-teal" aria-hidden>
+        {icon}
+      </span>
+      {title}
     </h2>
   );
-}
-
-function ResourceItem({
-  r,
-  opened,
-}: {
-  r: {
-    id: string;
-    title: string;
-    url: string | null;
-    author: string | null;
-    note: string | null;
-  };
-  opened: boolean;
-}) {
-  const content = (
-    <div
-      className={`flex items-start gap-3 rounded-2xl border p-4 transition hover:shadow-sm ${
-        opened
-          ? "border-teal/40 bg-teal/[0.04]"
-          : "border-border bg-card hover:border-teal/50"
-      }`}
-    >
-      <div className="min-w-0 flex-1">
-        <p className="font-display text-sm font-semibold text-ink">
-          {r.title}
-          {r.author && <span className="text-muted"> — {r.author}</span>}
-        </p>
-        {r.note && (
-          <p className="prose-money mt-1 text-xs italic text-muted">{r.note}</p>
-        )}
-      </div>
-      {r.url && (
-        <span className="shrink-0 font-display text-xs font-semibold text-teal">
-          {opened ? "Opened ✓" : "Open ↗"}
-        </span>
-      )}
-    </div>
-  );
-
-  if (r.url) {
-    // Route through /go/[id] so the open is tracked (and awards XP once).
-    return (
-      <li>
-        <a href={`/go/${r.id}`} target="_blank" rel="noopener noreferrer">
-          {content}
-        </a>
-      </li>
-    );
-  }
-  return <li>{content}</li>;
 }
