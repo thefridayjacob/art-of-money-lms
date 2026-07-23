@@ -33,14 +33,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       apiKey: RESEND_KEY ?? "dev-no-key",
       from: EMAIL_FROM,
       async sendVerificationRequest({ identifier: email, url }) {
-        // Dev fallback: no Resend key yet → print the magic link to the
-        // server log so we can test the whole flow without sending mail.
-        if (!RESEND_KEY) {
-          console.log(
-            `\n\n🔑  MAGIC LINK for ${email}\n${url}\n(no AUTH_RESEND_KEY set — this link is logged for local testing)\n\n`,
-          );
-          return;
+        // In development, always print the link so we can test locally.
+        if (process.env.NODE_ENV !== "production") {
+          console.log(`\n\n🔑  MAGIC LINK for ${email}\n${url}\n\n`);
         }
+        // No Resend key → dev-only flow, nothing to send.
+        if (!RESEND_KEY) return;
 
         const res = await fetch("https://api.resend.com/emails", {
           method: "POST",
