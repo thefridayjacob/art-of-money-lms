@@ -20,7 +20,7 @@ const lora = Lora({
 export const metadata: Metadata = {
   title: "The Art of Money — Learn how money actually works",
   description:
-    "A free, gamified course on how money actually works. 15 lessons, 76 models, written for Nigerians. Track your progress, master the models, get un-farmable.",
+    "A gamified course on how money actually works. 15 lessons, 76 models, written for Nigerians. Track your progress, master the models, get un-farmable.",
 };
 
 export default function RootLayout({

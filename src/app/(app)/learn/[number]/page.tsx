@@ -252,7 +252,7 @@ export default async function LessonPage({
         {nav.prev ? (
           <Link
             href={`/learn/${nav.prev.number}`}
-            className="press flex flex-1 items-center gap-2 rounded-2xl border border-border p-4 transition hover:border-teal/50"
+            className="press flex min-w-0 flex-1 items-center gap-2 rounded-2xl border border-border p-4 transition hover:border-teal/50"
           >
             <CaretLeft size={16} weight="bold" className="shrink-0 text-muted" />
             <span className="min-w-0">
@@ -268,7 +268,7 @@ export default async function LessonPage({
         {nav.next ? (
           <Link
             href={`/learn/${nav.next.number}`}
-            className="press flex flex-1 items-center justify-end gap-2 rounded-2xl border border-border p-4 text-right transition hover:border-teal/50"
+            className="press flex min-w-0 flex-1 items-center justify-end gap-2 rounded-2xl border border-border p-4 text-right transition hover:border-teal/50"
           >
             <span className="min-w-0">
               <span className="block font-display text-xs text-muted">Next</span>

@@ -18,7 +18,7 @@ import { Reveal } from "@/components/marketing/Reveal";
 export const metadata = {
   title: "The Art of Money — Learn how money actually works",
   description:
-    "A free, gamified course on how money actually works. 15 lessons, 76 models, written for Nigerians. Track your progress, master the models, stop being farmed.",
+    "A gamified course on how money actually works. 15 lessons, 76 models, written for Nigerians. Track your progress, master the models, stop being farmed.",
 };
 
 const PARTS = [
@@ -83,16 +83,17 @@ export default function Landing() {
             href="/signup"
             className="press rounded-full bg-teal px-4 py-2 font-semibold text-white transition hover:bg-teal-bright"
           >
-            Start free
+            Sign up
           </Link>
         </div>
       </header>
 
-      {/* Hero: asymmetric split */}
+      {/* Hero: asymmetric split. Rendered visible by default (no reveal
+          gating) so the most important content never depends on JS. */}
       <section className="mx-auto grid max-w-6xl items-center gap-12 px-5 pb-20 pt-10 lg:grid-cols-[1.15fr_0.85fr] lg:pt-16">
-        <Reveal>
+        <div>
           <p className="font-display text-xs font-semibold uppercase tracking-[0.28em] text-teal-bright">
-            Free, forever
+            The missing curriculum
           </p>
           <h1 className="mt-5 font-display text-5xl font-extrabold leading-[0.98] tracking-tight text-chalk sm:text-6xl">
             Nobody teaches you money.
@@ -108,7 +109,7 @@ export default function Landing() {
               href="/signup"
               className="press inline-flex items-center gap-2 rounded-full bg-teal px-7 py-3.5 font-display font-semibold text-white shadow-lg shadow-teal/20 transition hover:bg-teal-bright"
             >
-              Start learning free <ArrowRight size={16} weight="bold" />
+              Start learning <ArrowRight size={16} weight="bold" />
             </Link>
             <Link
               href="/login"
@@ -128,10 +129,10 @@ export default function Landing() {
               ),
             )}
           </ul>
-        </Reveal>
+        </div>
 
         {/* Real product-preview cluster */}
-        <Reveal delay={0.15} className="relative hidden lg:block">
+        <div className="relative hidden lg:block">
           <div className="rounded-3xl border border-white/10 bg-ink-soft p-6">
             <div className="flex items-center gap-4">
               <ProgressRing progress={0.62} size={84} stroke={8} color="var(--color-teal)">
@@ -187,7 +188,7 @@ export default function Landing() {
               ))}
             </div>
           </div>
-        </Reveal>
+        </div>
       </section>
 
       {/* Manifesto */}
@@ -294,15 +295,14 @@ export default function Landing() {
             Stop being farmed.
             <span className="block text-teal-bright">Start learning.</span>
           </h2>
-          <p className="prose-money mx-auto mt-5 max-w-md text-lg text-chalk/60">
-            Free, forever. The frameworks last a lifetime. The only cost is an
-            hour a week.
+          <p className="prose-money mx-auto mt-5 max-w-md text-lg text-chalk/70">
+            The frameworks last a lifetime. Fifteen lessons, one week at a time.
           </p>
           <Link
             href="/signup"
             className="press mt-8 inline-flex items-center gap-2 rounded-full bg-teal px-8 py-4 font-display font-semibold text-white shadow-lg shadow-teal/20 transition hover:bg-teal-bright"
           >
-            Create your free account <ArrowRight size={17} weight="bold" />
+            Create your account <ArrowRight size={17} weight="bold" />
           </Link>
         </Reveal>
       </section>

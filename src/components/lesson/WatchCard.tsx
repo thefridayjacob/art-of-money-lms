@@ -41,6 +41,7 @@ export function WatchCard({
             src={media.thumb}
             alt=""
             fill
+            unoptimized
             sizes="(max-width: 640px) 100vw, 320px"
             className="object-cover transition duration-300 group-hover:scale-[1.03]"
           />

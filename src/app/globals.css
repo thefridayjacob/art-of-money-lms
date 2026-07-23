@@ -58,6 +58,18 @@ body {
   line-height: 1.7;
 }
 
+/* Even line lengths on headings, fewer orphans in prose */
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+p,
+li,
+.prose-money {
+  text-wrap: pretty;
+}
+
 /* Custom easing curves (default CSS eases are too weak) */
 :root {
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);

@@ -24,7 +24,7 @@ export default function SignupPage() {
           Start learning.
         </h1>
         <p className="prose-money mt-3 text-chalk/60">
-          Free, forever. 15 lessons on how money actually works.
+          15 lessons on how money actually works, written for Nigerians.
         </p>
 
         <div className="mt-8">
