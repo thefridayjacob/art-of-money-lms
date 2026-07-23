@@ -104,7 +104,6 @@ export default async function DashboardPage() {
           total={d.models.total}
           color="pink"
           pct={d.models.total ? d.models.done / d.models.total : 0}
-          href="/deck"
           icon={<Brain size={20} weight="duotone" />}
         />
         <StatCard

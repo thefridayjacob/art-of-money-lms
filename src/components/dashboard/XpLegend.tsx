@@ -27,9 +27,9 @@ export function XpLegend() {
         XP are points you collect for doing the work. Stack them up to climb
         levels and unlock badges.
       </p>
-      <ul className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+      <ul className="mt-4 divide-y divide-border/70">
         {ITEMS.map(({ Icon, label, pts }) => (
-          <li key={label} className="flex items-center gap-3">
+          <li key={label} className="flex items-center gap-3 py-2.5">
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal/10 text-teal">
               <Icon size={17} weight="duotone" />
             </span>
