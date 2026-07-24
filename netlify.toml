@@ -1,6 +1,9 @@
+# Netlify auto-detects Next.js and provisions the Next.js Runtime (v5),
+# so we do NOT declare @netlify/plugin-nextjs or a publish dir here —
+# the adapter manages the build output. We only pin the Node version and
+# the build command explicitly.
 [build]
   command = "npm run build"
-  publish = ".next"
 
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
+[build.environment]
+  NODE_VERSION = "20"
