@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { eq } from "drizzle-orm";
+import { Gear } from "@phosphor-icons/react/dist/ssr";
 import { auth, signOut } from "@/auth";
 import { db } from "@/db";
 import { userStats } from "@/db/schema";
@@ -58,6 +59,15 @@ export async function AppHeader() {
               className="text-muted transition hover:text-ink"
             >
               Admin
+            </Link>
+          )}
+          {session?.user && (
+            <Link
+              href="/settings"
+              aria-label="Settings"
+              className="text-muted transition hover:text-ink"
+            >
+              <Gear size={18} weight="bold" />
             </Link>
           )}
           {session?.user ? (
