@@ -7,6 +7,7 @@ import {
   UsersThree,
   LinkSimple,
   ArrowRight,
+  Path,
 } from "@phosphor-icons/react/dist/ssr";
 import { auth } from "@/auth";
 import { getDashboardData } from "@/lib/stats";
@@ -148,10 +149,13 @@ export default async function DashboardPage() {
           total={today.total}
         />
         <XpLegend />
-        <div className="rounded-3xl border border-border bg-card p-5">
-          <p className="font-display text-sm font-bold text-ink">
+        <div className="rounded-3xl border border-pink/25 bg-pink/[0.04] p-5">
+          <h2 className="flex items-center gap-2 font-display text-sm font-bold text-ink">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-pink/15 text-pink">
+              <Path size={16} weight="fill" />
+            </span>
             Your journey
-          </p>
+          </h2>
           <div className="mt-3 space-y-3">
             {d.parts.map((p) => {
               const pct = p.total ? p.done / p.total : 0;
@@ -166,7 +170,7 @@ export default async function DashboardPage() {
                     </span>
                   </div>
                   <div className="mt-1.5">
-                    <AnimatedBar value={pct} />
+                    <AnimatedBar value={pct} color="var(--color-pink)" />
                   </div>
                 </div>
               );

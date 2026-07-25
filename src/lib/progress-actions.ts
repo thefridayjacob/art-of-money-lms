@@ -9,6 +9,7 @@ import {
   modelMastery,
   homeworkStatus,
   teachLog,
+  userStats,
 } from "@/db/schema";
 import { awardXpOnce, XP } from "@/lib/xp";
 import { checkAndAwardBadges } from "@/lib/badges-engine";
@@ -169,10 +170,18 @@ export async function completeLesson(lessonId: string, lessonNumber: number) {
   const awarded = await awardXpOnce(userId, "lesson_complete", lessonId);
 
   const newBadges = await checkAndAwardBadges(userId);
+  const [stats] = await db
+    .select({ xp: userStats.xp, streak: userStats.currentStreak })
+    .from(userStats)
+    .where(eq(userStats.userId, userId))
+    .limit(1);
+
   revalidateLesson(lessonNumber);
   return {
     completed: true,
     xpAwarded: awarded ? XP.lesson_complete : 0,
     newBadges,
+    totalXp: stats?.xp ?? 0,
+    streak: stats?.streak ?? 0,
   };
 }

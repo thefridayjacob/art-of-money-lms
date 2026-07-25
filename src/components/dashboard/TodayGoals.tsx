@@ -19,10 +19,12 @@ export function TodayGoals({
   const allDone = doneCount === total;
 
   return (
-    <div className="rounded-3xl border border-border bg-card p-5">
+    <div className="rounded-3xl border border-teal/25 bg-teal/[0.05] p-5">
       <div className="flex items-center justify-between">
         <h2 className="flex items-center gap-2 font-display text-sm font-bold text-ink">
-          <Target size={18} weight="duotone" className="text-teal" />
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-teal/20 text-teal">
+            <Target size={16} weight="fill" />
+          </span>
           Today&apos;s goals
         </h2>
         <span className="font-display text-xs font-semibold text-muted">
