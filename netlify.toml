@@ -7,3 +7,9 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  # EMAIL_FROM is the public sender address (shown in the email "From" header),
+  # used only in server-side code. It is not a secret, so exclude it from
+  # Netlify's secret scanner, which otherwise fails the build on finding it
+  # in the server build output. Real secrets (DATABASE_URL, RESEND_API_KEY,
+  # AUTH_SECRET, GOOGLE_CLIENT_SECRET) are runtime-only and stay scanned.
+  SECRETS_SCAN_OMIT_KEYS = "EMAIL_FROM"
