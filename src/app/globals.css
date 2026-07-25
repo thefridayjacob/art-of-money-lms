@@ -94,6 +94,28 @@ li,
   }
 }
 
+/* One-time pop for a freshly-shown state (base state stays visible if it
+   never runs, so it never gates content). */
+@keyframes pop-in {
+  0% {
+    transform: scale(0.6);
+  }
+  60% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.pop-in {
+  animation: pop-in 0.4s var(--ease-out) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pop-in {
+    animation: none;
+  }
+}
+
 /* The signature "peel" pill */
 .peel {
   display: inline-flex;

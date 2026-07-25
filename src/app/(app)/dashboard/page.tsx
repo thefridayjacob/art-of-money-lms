@@ -10,10 +10,13 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import { auth } from "@/auth";
 import { getDashboardData } from "@/lib/stats";
+import { getContinueLearning, getTodayGoals } from "@/lib/dashboard-extra";
 import { ProgressRing } from "@/components/ProgressRing";
 import { BadgeShelf } from "@/components/dashboard/BadgeShelf";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { XpLegend } from "@/components/dashboard/XpLegend";
+import { ContinueLearning } from "@/components/dashboard/ContinueLearning";
+import { TodayGoals } from "@/components/dashboard/TodayGoals";
 import { AnimatedNumber, AnimatedBar } from "@/components/dashboard/anim";
 
 export const metadata = { title: "Dashboard · The Art of Money" };
@@ -22,13 +25,18 @@ export default async function DashboardPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const d = await getDashboardData(session.user.id);
+  const userId = session.user.id;
+  const [d, continueCards, today] = await Promise.all([
+    getDashboardData(userId),
+    getContinueLearning(userId),
+    getTodayGoals(userId),
+  ]);
   const name = session.user.displayName || session.user.name || "";
   const firstName = name ? name.split(" ")[0] : "";
   const xpToNext = d.xpForLevel - d.xpIntoLevel;
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-8 sm:px-5 sm:py-10">
+    <main className="mx-auto max-w-5xl px-4 py-8 sm:px-5 sm:py-10">
       <h1 className="font-display text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">
         Welcome back{firstName ? `, ${firstName}` : ""}.
       </h1>
@@ -129,35 +137,43 @@ export default async function DashboardPage() {
           />
         </section>
 
-      {/* XP explainer + Journey */}
-        <section className="mt-8 grid gap-4 lg:grid-cols-2">
-          <XpLegend />
-          <div className="rounded-3xl border border-border bg-card p-5">
-            <p className="font-display text-sm font-bold text-ink">
-              Your journey
-            </p>
-            <div className="mt-3 space-y-3">
-              {d.parts.map((p) => {
-                const pct = p.total ? p.done / p.total : 0;
-                return (
-                  <div key={p.partNumber}>
-                    <div className="flex items-center justify-between">
-                      <p className="truncate font-display text-sm text-ink">
-                        Part {p.partNumber} · {p.partTitle}
-                      </p>
-                      <span className="ml-2 shrink-0 font-display text-xs font-semibold text-muted">
-                        {p.done}/{p.total}
-                      </span>
-                    </div>
-                    <div className="mt-1.5">
-                      <AnimatedBar value={pct} />
-                    </div>
+      {/* Continue learning */}
+      <ContinueLearning cards={continueCards} />
+
+      {/* Today's goals + XP explainer + Journey */}
+      <section className="mt-8 grid gap-4 lg:grid-cols-3">
+        <TodayGoals
+          goals={today.goals}
+          doneCount={today.doneCount}
+          total={today.total}
+        />
+        <XpLegend />
+        <div className="rounded-3xl border border-border bg-card p-5">
+          <p className="font-display text-sm font-bold text-ink">
+            Your journey
+          </p>
+          <div className="mt-3 space-y-3">
+            {d.parts.map((p) => {
+              const pct = p.total ? p.done / p.total : 0;
+              return (
+                <div key={p.partNumber}>
+                  <div className="flex items-center justify-between">
+                    <p className="truncate font-display text-sm text-ink">
+                      Part {p.partNumber} · {p.partTitle}
+                    </p>
+                    <span className="ml-2 shrink-0 font-display text-xs font-semibold text-muted">
+                      {p.done}/{p.total}
+                    </span>
                   </div>
-                );
-              })}
-            </div>
+                  <div className="mt-1.5">
+                    <AnimatedBar value={pct} />
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        </section>
+        </div>
+      </section>
 
       {/* Badges */}
         <section className="mt-8">
