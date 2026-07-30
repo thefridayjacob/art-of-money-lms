@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { asc } from "drizzle-orm";
-import { CaretRight, PencilSimple } from "@phosphor-icons/react/dist/ssr";
+import {
+  CaretRight,
+  PencilSimple,
+  Users as UsersIcon,
+} from "@phosphor-icons/react/dist/ssr";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { parts, lessons } from "@/db/schema";
@@ -37,6 +41,24 @@ export default async function AdminPage() {
         Edit any lesson, model, or resource. Changes go live for learners
         immediately.
       </p>
+
+      <Link
+        href="/admin/users"
+        className="press mt-6 flex items-center gap-3 rounded-2xl border border-border bg-card p-4 transition hover:border-teal/50"
+      >
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal/10">
+          <UsersIcon size={18} weight="duotone" className="text-teal" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block font-display text-sm font-semibold text-ink">
+            Members
+          </span>
+          <span className="font-display text-xs text-muted">
+            View, manage, and remove people who have accounts
+          </span>
+        </span>
+        <CaretRight size={16} weight="bold" className="text-muted" />
+      </Link>
 
       <div className="mt-8 space-y-8">
         {partRows.map((part) => (
