@@ -6,10 +6,11 @@ import {
   CheckCircle,
   ArrowUpRight,
 } from "@phosphor-icons/react/dist/ssr";
-import { classifyResource } from "@/lib/resource-media";
+import { classifyResource, resourceHref } from "@/lib/resource-media";
 
 type Resource = {
   id: string;
+  kind: "watch" | "read" | "article";
   title: string;
   url: string | null;
   author: string | null;
@@ -24,7 +25,7 @@ export function WatchCard({
   opened: boolean;
 }) {
   const media = classifyResource(r.url);
-  const href = r.url ? `/go/${r.id}` : undefined;
+  const { href, tracked } = resourceHref(r);
 
   const card = (
     <div
@@ -80,23 +81,22 @@ export function WatchCard({
           </p>
         )}
         <span className="mt-3 inline-flex items-center gap-1 font-display text-xs font-semibold text-teal">
-          {media.type === "video"
-            ? "Watch"
-            : media.type === "playlist"
-              ? "Open playlist"
-              : "Open channel"}
+          {!tracked
+            ? "Search on YouTube"
+            : media.type === "video"
+              ? "Watch"
+              : media.type === "playlist"
+                ? "Open playlist"
+                : "Open channel"}
           <ArrowUpRight size={13} weight="bold" />
         </span>
       </div>
     </div>
   );
 
-  if (href) {
-    return (
-      <a href={href} target="_blank" rel="noopener noreferrer" className="block h-full">
-        {card}
-      </a>
-    );
-  }
-  return card;
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer" className="block h-full">
+      {card}
+    </a>
+  );
 }

@@ -3,7 +3,9 @@ import {
   NewspaperClipping,
   CheckCircle,
   ArrowUpRight,
+  MagnifyingGlass,
 } from "@phosphor-icons/react/dist/ssr";
+import { resourceHref } from "@/lib/resource-media";
 
 type Resource = {
   id: string;
@@ -16,7 +18,8 @@ type Resource = {
 
 export function ReadCard({ r, opened }: { r: Resource; opened: boolean }) {
   const isArticle = r.kind === "article";
-  const href = r.url ? `/go/${r.id}` : undefined;
+  const isBook = r.kind === "read";
+  const { href, tracked } = resourceHref(r);
 
   const inner = (
     <div
@@ -50,34 +53,32 @@ export function ReadCard({ r, opened }: { r: Resource; opened: boolean }) {
             {r.note}
           </p>
         )}
-        {href && (
-          <span className="mt-2 inline-flex items-center gap-1 font-display text-xs font-semibold text-teal">
-            {opened ? (
-              <>
-                <CheckCircle size={13} weight="fill" /> Opened
-              </>
-            ) : (
-              <>
-                Read <ArrowUpRight size={13} weight="bold" />
-              </>
-            )}
-          </span>
-        )}
-        {!href && (
-          <span className="mt-2 inline-block font-display text-xs text-muted">
-            Book · find it anywhere
-          </span>
-        )}
+        <span className="mt-2 inline-flex items-center gap-1 font-display text-xs font-semibold text-teal">
+          {tracked && opened ? (
+            <>
+              <CheckCircle size={13} weight="fill" /> Opened
+            </>
+          ) : tracked ? (
+            <>
+              Read <ArrowUpRight size={13} weight="bold" />
+            </>
+          ) : isBook ? (
+            <>
+              <MagnifyingGlass size={13} weight="bold" /> Find this book
+            </>
+          ) : (
+            <>
+              <MagnifyingGlass size={13} weight="bold" /> Search for this
+            </>
+          )}
+        </span>
       </div>
     </div>
   );
 
-  if (href) {
-    return (
-      <a href={href} target="_blank" rel="noopener noreferrer" className="block h-full">
-        {inner}
-      </a>
-    );
-  }
-  return inner;
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer" className="block h-full">
+      {inner}
+    </a>
+  );
 }

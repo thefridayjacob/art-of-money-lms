@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
-import { Flame, Lightning, ArrowRight, Trophy } from "@phosphor-icons/react";
+import { Flame, Lightning, ArrowRight, Trophy, X } from "@phosphor-icons/react";
 
 type Badge = {
   key: string;
@@ -53,6 +53,16 @@ export function SuccessScreen({
     [],
   );
 
+  // Close on Escape while open.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
   return (
     <AnimatePresence>
       {open && (
@@ -62,8 +72,17 @@ export function SuccessScreen({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Lesson ${lessonNumber} complete`}
         >
-          <div className="absolute inset-0 bg-ink/80 backdrop-blur-sm" />
+          {/* Backdrop — clicking it dismisses and keeps you on the lesson */}
+          <button
+            type="button"
+            aria-label="Close"
+            onClick={onClose}
+            className="absolute inset-0 cursor-default bg-ink/80 backdrop-blur-sm"
+          />
 
           <motion.div
             initial={{ scale: 0.92, y: 16 }}
@@ -72,6 +91,16 @@ export function SuccessScreen({
             transition={{ type: "spring", stiffness: 260, damping: 22 }}
             className="relative w-full max-w-sm overflow-hidden rounded-[2rem] border border-border bg-card p-7 text-center shadow-2xl"
           >
+            {/* Close */}
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close"
+              className="press absolute right-3.5 top-3.5 z-10 flex h-9 w-9 items-center justify-center rounded-full text-muted transition hover:bg-ink/5 hover:text-ink"
+            >
+              <X size={18} weight="bold" />
+            </button>
+
             {/* Confetti */}
             <div className="pointer-events-none absolute left-1/2 top-24">
               {confetti.map((c) => (
@@ -186,6 +215,13 @@ export function SuccessScreen({
               >
                 Back to dashboard
               </Link>
+              <button
+                type="button"
+                onClick={onClose}
+                className="font-display text-xs font-semibold text-muted underline-offset-2 transition hover:text-ink hover:underline"
+              >
+                Stay and review this lesson
+              </button>
             </div>
           </motion.div>
         </motion.div>

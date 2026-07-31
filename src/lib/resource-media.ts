@@ -46,3 +46,31 @@ export function classifyResource(url: string | null): ResourceMedia {
 
   return { type: "web", host };
 }
+
+/**
+ * Where a resource card should point. Resources with a real URL go through the
+ * tracked `/go/:id` redirect (records the open, awards XP). Link-less resources
+ * (a book, or a creator named without a link) fall back to a search for their
+ * title so the card still takes the learner *to the referenced resource*
+ * instead of being a dead end.
+ */
+export function resourceHref(r: {
+  id: string;
+  kind: string;
+  title: string;
+  url: string | null;
+  author?: string | null;
+}): { href: string; tracked: boolean } {
+  if (r.url) return { href: `/go/${r.id}`, tracked: true };
+  const query = [r.title, r.author]
+    .filter(Boolean)
+    .join(" ")
+    .replace(/[“”"]/g, "")
+    .trim();
+  const q = encodeURIComponent(query);
+  const href =
+    r.kind === "watch"
+      ? `https://www.youtube.com/results?search_query=${q}`
+      : `https://www.google.com/search?q=${q}`;
+  return { href, tracked: false };
+}
