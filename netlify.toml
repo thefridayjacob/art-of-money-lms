@@ -12,4 +12,7 @@
   # Netlify's secret scanner, which otherwise fails the build on finding it
   # in the server build output. Real secrets (DATABASE_URL, RESEND_API_KEY,
   # AUTH_SECRET, GOOGLE_CLIENT_SECRET) are runtime-only and stay scanned.
-  SECRETS_SCAN_OMIT_KEYS = "EMAIL_FROM"
+  # COURSE_PRICE_KOBO is a public price (shown on the unlock page), not a
+  # secret. PAYSTACK_SECRET_KEY is deliberately NOT listed — it must stay
+  # scanned; it is runtime-only and never in build output.
+  SECRETS_SCAN_OMIT_KEYS = "EMAIL_FROM,COURSE_PRICE_KOBO"

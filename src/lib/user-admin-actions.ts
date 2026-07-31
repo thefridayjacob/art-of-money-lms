@@ -63,3 +63,25 @@ export async function setAdmin(
   revalidatePath("/admin/users");
   return { ok: makeAdmin ? "Admin access granted." : "Admin access removed." };
 }
+
+/** Manually grant or revoke paid course access (e.g. a comp, a manual bank
+ * transfer, or a refund). */
+export async function setAccess(
+  _prev: UserAdminState,
+  formData: FormData,
+): Promise<UserAdminState> {
+  await requireAdmin();
+  const userId = String(formData.get("userId") ?? "");
+  const grant = String(formData.get("grant") ?? "") === "true";
+  if (!userId) return { error: "Missing user." };
+
+  await db
+    .update(users)
+    .set({
+      hasAccess: grant,
+      accessGrantedAt: grant ? new Date() : null,
+    })
+    .where(eq(users.id, userId));
+  revalidatePath("/admin/users");
+  return { ok: grant ? "Course access granted." : "Course access revoked." };
+}

@@ -29,6 +29,7 @@ export default async function AdminUsersPage() {
       name: users.name,
       displayName: users.displayName,
       isAdmin: users.isAdmin,
+      hasAccess: users.hasAccess,
       passwordHash: users.passwordHash,
       createdAt: users.createdAt,
       xp: userStats.xp,
@@ -50,6 +51,7 @@ export default async function AdminUsersPage() {
   const googleIds = new Set(googleRows.map((r) => r.userId));
 
   const totalXp = rows.reduce((s, r) => s + (r.xp ?? 0), 0);
+  const paidCount = rows.filter((r) => r.hasAccess).length;
   const activeThisWeek = rows.filter((r) => {
     if (!r.lastActive) return false;
     const days =
@@ -63,6 +65,7 @@ export default async function AdminUsersPage() {
     name: r.name,
     displayName: r.displayName,
     isAdmin: r.isAdmin,
+    hasAccess: r.hasAccess,
     hasPassword: !!r.passwordHash,
     hasGoogle: googleIds.has(r.id),
     xp: r.xp ?? 0,
@@ -92,8 +95,9 @@ export default async function AdminUsersPage() {
       </p>
 
       {/* Summary */}
-      <div className="mt-6 grid grid-cols-3 gap-3">
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat label="Members" value={list.length} />
+        <Stat label="Paid" value={paidCount} />
         <Stat label="Active this week" value={activeThisWeek} />
         <Stat label="Total XP" value={totalXp} />
       </div>

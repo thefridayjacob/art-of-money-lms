@@ -8,10 +8,13 @@ import {
   GoogleLogo,
   Key,
   Warning,
+  LockKeyOpen,
+  LockKey,
 } from "@phosphor-icons/react";
 import {
   deleteUser,
   setAdmin,
+  setAccess,
   type UserAdminState,
 } from "@/lib/user-admin-actions";
 
@@ -21,6 +24,7 @@ export type AdminUser = {
   name: string | null;
   displayName: string | null;
   isAdmin: boolean;
+  hasAccess: boolean;
   hasPassword: boolean;
   hasGoogle: boolean;
   xp: number;
@@ -39,9 +43,13 @@ export function UserRow({ user, isSelf }: { user: AdminUser; isSelf: boolean }) 
     UserAdminState,
     FormData
   >(setAdmin, undefined);
+  const [accessState, accessAction, savingAccess] = useActionState<
+    UserAdminState,
+    FormData
+  >(setAccess, undefined);
 
   const name = user.displayName || user.name || "—";
-  const error = delState?.error || adminState?.error;
+  const error = delState?.error || adminState?.error || accessState?.error;
 
   return (
     <li className="rounded-2xl border border-border bg-card p-4">
@@ -54,6 +62,11 @@ export function UserRow({ user, isSelf }: { user: AdminUser; isSelf: boolean }) 
             {user.isAdmin && (
               <span className="rounded-full bg-teal/10 px-2 py-0.5 font-display text-[10px] font-bold uppercase tracking-wide text-teal">
                 Admin
+              </span>
+            )}
+            {user.hasAccess && !user.isAdmin && (
+              <span className="rounded-full bg-amber/15 px-2 py-0.5 font-display text-[10px] font-bold uppercase tracking-wide text-amber-ink">
+                Paid
               </span>
             )}
             {isSelf && (
@@ -89,7 +102,36 @@ export function UserRow({ user, isSelf }: { user: AdminUser; isSelf: boolean }) 
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+          {/* Grant / revoke course access */}
+          {!user.isAdmin && (
+            <form action={accessAction}>
+              <input type="hidden" name="userId" value={user.id} />
+              <input
+                type="hidden"
+                name="grant"
+                value={(!user.hasAccess).toString()}
+              />
+              <button
+                type="submit"
+                disabled={savingAccess}
+                title={user.hasAccess ? "Revoke course access" : "Grant course access"}
+                className={`press inline-flex items-center gap-1 rounded-full border px-2.5 py-1.5 font-display text-xs font-semibold transition disabled:opacity-40 ${
+                  user.hasAccess
+                    ? "border-border text-muted hover:border-ink/30 hover:text-ink"
+                    : "border-amber/40 bg-amber/10 text-amber-ink hover:bg-amber/15"
+                }`}
+              >
+                {user.hasAccess ? (
+                  <LockKey size={14} weight="bold" />
+                ) : (
+                  <LockKeyOpen size={14} weight="bold" />
+                )}
+                {user.hasAccess ? "Revoke access" : "Grant access"}
+              </button>
+            </form>
+          )}
+
           {/* Grant / revoke admin */}
           <form action={adminAction}>
             <input type="hidden" name="userId" value={user.id} />

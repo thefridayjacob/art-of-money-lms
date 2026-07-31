@@ -65,6 +65,9 @@ export const users = pgTable("users", {
   // App-specific
   displayName: text("display_name"),
   isAdmin: boolean("is_admin").notNull().default(false),
+  // Paywall: whether this user has paid for (or been granted) course access.
+  hasAccess: boolean("has_access").notNull().default(false),
+  accessGrantedAt: timestamp("access_granted_at", { mode: "date" }),
   marketingOptIn: boolean("marketing_opt_in").notNull().default(false),
   marketingOptInAt: timestamp("marketing_opt_in_at", { mode: "date" }),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
@@ -321,6 +324,23 @@ export const userBadges = pgTable(
   },
   (t) => [uniqueIndex("user_badges_user_badge").on(t.userId, t.badgeId)],
 );
+
+/* ------------------------------------------------------------------ *
+ * Payments (Paystack)
+ * ------------------------------------------------------------------ */
+
+export const payments = pgTable("payments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  reference: text("reference").notNull().unique(), // Paystack transaction ref
+  userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
+  email: text("email").notNull(),
+  amount: integer("amount").notNull(), // kobo
+  currency: text("currency").notNull().default("NGN"),
+  status: text("status").notNull().default("pending"), // pending | success | failed
+  channel: text("channel"), // card | bank_transfer | ...
+  paidAt: timestamp("paid_at", { mode: "date" }),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
 
 /* ------------------------------------------------------------------ *
  * Relations
