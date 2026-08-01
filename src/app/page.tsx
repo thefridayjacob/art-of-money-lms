@@ -74,17 +74,35 @@ const FEATURES = [
   { Icon: UsersThree, title: "Teach one person", body: "The single most effective study technique ever measured. Built in." },
 ];
 
+// Rendered at request time so the DB is read with the runtime DATABASE_URL
+// (not the build environment), and never blocks a deploy.
+export const dynamic = "force-dynamic";
+
+async function getCourseNumbers() {
+  // Sensible fallbacks so the page always renders even if the DB is briefly
+  // unreachable — the landing must never break.
+  try {
+    const [[l], [m], rows] = await Promise.all([
+      db.select({ n: sql<number>`count(*)::int` }).from(lessons),
+      db.select({ n: sql<number>`count(*)::int` }).from(models),
+      db
+        .select({ title: models.title })
+        .from(models)
+        .orderBy(asc(models.number))
+        .limit(30),
+    ]);
+    return {
+      lessonCount: l?.n ?? 15,
+      modelCount: m?.n ?? 76,
+      modelNames: rows.map((r) => r.title),
+    };
+  } catch {
+    return { lessonCount: 15, modelCount: 76, modelNames: [] as string[] };
+  }
+}
+
 export default async function Landing() {
-  const [[{ lessonCount }], [{ modelCount }], modelRows] = await Promise.all([
-    db.select({ lessonCount: sql<number>`count(*)::int` }).from(lessons),
-    db.select({ modelCount: sql<number>`count(*)::int` }).from(models),
-    db
-      .select({ title: models.title })
-      .from(models)
-      .orderBy(asc(models.number))
-      .limit(30),
-  ]);
-  const modelNames = modelRows.map((m) => m.title);
+  const { lessonCount, modelCount, modelNames } = await getCourseNumbers();
 
   return (
     <main className="flex-1 bg-ink text-chalk">
