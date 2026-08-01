@@ -342,6 +342,22 @@ export const payments = pgTable("payments", {
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 
+/**
+ * Access codes — the gateway-independent way to unlock the course. Generated
+ * by an admin, sold via Selar (or handed out), and redeemed on /unlock. Each
+ * code unlocks exactly one account.
+ */
+export const accessCodes = pgTable("access_codes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  code: text("code").notNull().unique(),
+  note: text("note"), // e.g. "Selar Aug batch" or a buyer's email
+  usedByUserId: text("used_by_user_id").references(() => users.id, {
+    onDelete: "set null",
+  }),
+  usedAt: timestamp("used_at", { mode: "date" }),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
+
 /* ------------------------------------------------------------------ *
  * Relations
  * ------------------------------------------------------------------ */

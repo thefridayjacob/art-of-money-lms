@@ -15,4 +15,4 @@
   # COURSE_PRICE_KOBO is a public price (shown on the unlock page), not a
   # secret. PAYSTACK_SECRET_KEY is deliberately NOT listed — it must stay
   # scanned; it is runtime-only and never in build output.
-  SECRETS_SCAN_OMIT_KEYS = "EMAIL_FROM,COURSE_PRICE_KOBO"
+  SECRETS_SCAN_OMIT_KEYS = "EMAIL_FROM,COURSE_PRICE_KOBO,SELAR_PRODUCT_URL"
