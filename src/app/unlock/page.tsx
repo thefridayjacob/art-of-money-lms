@@ -9,8 +9,9 @@ import {
   ArrowUpRight,
 } from "@phosphor-icons/react/dist/ssr";
 import { auth, signOut } from "@/auth";
+import { isNull } from "drizzle-orm";
 import { db } from "@/db";
-import { lessons, models } from "@/db/schema";
+import { lessons, models, accessCodes } from "@/db/schema";
 import { userHasAccess } from "@/lib/access";
 import { formatNaira, paystackKeyPresent } from "@/lib/paystack";
 import { getPaymentSettings, transferConfigured } from "@/lib/settings";
@@ -36,17 +37,24 @@ export default async function UnlockPage({
 
   const { error, canceled } = await searchParams;
 
-  const [[{ lessonCount }], [{ modelCount }], settings, claimStatus] =
+  const [[{ lessonCount }], [{ modelCount }], settings, claimStatus, [codes]] =
     await Promise.all([
       db.select({ lessonCount: sql<number>`count(*)::int` }).from(lessons),
       db.select({ modelCount: sql<number>`count(*)::int` }).from(models),
       getPaymentSettings(),
       myClaimStatus(),
+      db
+        .select({ n: sql<number>`count(*)::int` })
+        .from(accessCodes)
+        .where(isNull(accessCodes.usedByUserId)),
     ]);
 
   const priceLabel = settings.priceKobo > 0 ? formatNaira(settings.priceKobo) : "—";
   const transferOn = transferConfigured(settings);
   const paystackOn = paystackKeyPresent() && settings.priceKobo > 0;
+  // Only offer code redemption when unused codes actually exist (Selar/comps).
+  // Paystack buyers get instant access and never receive a code.
+  const codesActive = (codes?.n ?? 0) > 0;
 
   const includes = [
     {
@@ -173,21 +181,22 @@ export default async function UnlockPage({
             </div>
           )}
 
-          {/* Redeem an access code (after buying) */}
-          <div className="mt-6 border-t border-white/10 pt-5">
-            <p className="font-display text-sm font-semibold text-chalk">
-              Already purchased?
-            </p>
-            <p className="prose-money mt-0.5 text-xs text-chalk/50">
-              Enter the access code from your receipt to unlock instantly.
-            </p>
-            <RedeemForm />
-          </div>
+          {/* Redeem an access code — only when codes are actually in use */}
+          {codesActive && (
+            <div className="mt-6 border-t border-white/10 pt-5">
+              <p className="font-display text-sm font-semibold text-chalk">
+                Have an access code?
+              </p>
+              <p className="prose-money mt-0.5 text-xs text-chalk/50">
+                If you were given a code, enter it to unlock instantly.
+              </p>
+              <RedeemForm />
+            </div>
+          )}
 
-          {!SELAR_URL && !paystackOn && !transferOn && (
+          {!SELAR_URL && !paystackOn && !transferOn && !codesActive && (
             <p className="mt-6 rounded-2xl border border-amber/30 bg-amber/10 px-4 py-3 text-center font-display text-sm text-amber">
-              Checkout is being switched on. If you have an access code, enter it
-              above.
+              Checkout is being switched on. Please check back shortly.
             </p>
           )}
 
