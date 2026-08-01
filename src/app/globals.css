@@ -116,6 +116,82 @@ li,
   }
 }
 
+/* Seamless marquee (two identical tracks, translate by half) */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.animate-marquee {
+  animation: marquee 42s linear infinite;
+}
+.marquee-mask {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 8%,
+    #000 92%,
+    transparent
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 8%,
+    #000 92%,
+    transparent
+  );
+}
+
+/* Gentle perpetual float (decorative only) */
+@keyframes floaty {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+.animate-float {
+  animation: floaty 6s var(--ease-in-out) infinite;
+}
+
+/* Highlighted keyword — a hand-drawn teal marker that draws in behind the
+   text. The text itself is always visible; only the swash animates. */
+.marker {
+  position: relative;
+  white-space: nowrap;
+}
+.marker > span {
+  position: relative;
+  z-index: 1;
+}
+.marker::before {
+  content: "";
+  position: absolute;
+  left: -0.06em;
+  right: -0.06em;
+  bottom: 0.1em;
+  height: 0.34em;
+  z-index: 0;
+  border-radius: 0.1em;
+  background: var(--color-teal);
+  transform: skewX(-8deg) scaleX(1);
+  transform-origin: left center;
+  animation: marker-draw 0.7s 0.35s var(--ease-out) both;
+}
+@keyframes marker-draw {
+  from {
+    transform: skewX(-8deg) scaleX(0);
+  }
+  to {
+    transform: skewX(-8deg) scaleX(1);
+  }
+}
+
 /* The signature "peel" pill */
 .peel {
   display: inline-flex;

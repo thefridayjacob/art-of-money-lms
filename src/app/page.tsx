@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { asc, sql } from "drizzle-orm";
 import {
   Coins,
   Wrench,
@@ -11,9 +12,15 @@ import {
   UsersThree,
   ArrowRight,
   CheckCircle,
+  Infinity as InfinityIcon,
 } from "@phosphor-icons/react/dist/ssr";
-import { ProgressRing } from "@/components/ProgressRing";
+import { db } from "@/db";
+import { lessons, models } from "@/db/schema";
 import { Reveal } from "@/components/marketing/Reveal";
+import { MagneticLink } from "@/components/marketing/MagneticLink";
+import { CountUp } from "@/components/marketing/CountUp";
+import { HeroPreview } from "@/components/marketing/HeroPreview";
+import { ModelMarquee } from "@/components/marketing/ModelMarquee";
 
 export const metadata = {
   title: "The Art of Money — Learn how money actually works",
@@ -67,7 +74,18 @@ const FEATURES = [
   { Icon: UsersThree, title: "Teach one person", body: "The single most effective study technique ever measured. Built in." },
 ];
 
-export default function Landing() {
+export default async function Landing() {
+  const [[{ lessonCount }], [{ modelCount }], modelRows] = await Promise.all([
+    db.select({ lessonCount: sql<number>`count(*)::int` }).from(lessons),
+    db.select({ modelCount: sql<number>`count(*)::int` }).from(models),
+    db
+      .select({ title: models.title })
+      .from(models)
+      .orderBy(asc(models.number))
+      .limit(30),
+  ]);
+  const modelNames = modelRows.map((m) => m.title);
+
   return (
     <main className="flex-1 bg-ink text-chalk">
       {/* Top bar */}
@@ -96,21 +114,26 @@ export default function Landing() {
             The missing curriculum
           </p>
           <h1 className="mt-5 font-display text-5xl font-extrabold leading-[0.98] tracking-tight text-chalk sm:text-6xl">
-            Nobody teaches you money.
+            Nobody teaches you{" "}
+            <span className="marker">
+              <span>money</span>
+            </span>
+            .
             <span className="block text-teal-bright">This does.</span>
           </h1>
           <p className="prose-money mt-6 max-w-md text-lg text-chalk/70">
-            A course on how money actually works. 15 lessons, 76 models, written
-            for Nigerians tired of staying broke for bad reasons.
+            A course on how money actually works. {lessonCount} lessons,{" "}
+            {modelCount} models, written for Nigerians tired of staying broke for
+            bad reasons.
           </p>
 
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Link
+          <div className="mt-8 flex flex-wrap items-center gap-4">
+            <MagneticLink
               href="/signup"
               className="press inline-flex items-center gap-2 rounded-full bg-teal px-7 py-3.5 font-display font-semibold text-white shadow-lg shadow-teal/20 transition hover:bg-teal-bright"
             >
               Start learning <ArrowRight size={16} weight="bold" />
-            </Link>
+            </MagneticLink>
             <Link
               href="/login"
               className="font-display text-sm font-semibold text-chalk/60 transition hover:text-chalk"
@@ -131,63 +154,55 @@ export default function Landing() {
           </ul>
         </div>
 
-        {/* Real product-preview cluster */}
+        {/* Real product-preview cluster — floats + tilts toward the cursor */}
         <div className="relative hidden lg:block">
-          <div className="rounded-3xl border border-white/10 bg-ink-soft p-6">
-            <div className="flex items-center gap-4">
-              <ProgressRing progress={0.62} size={84} stroke={8} color="var(--color-teal)">
-                <span className="font-display text-[9px] font-semibold uppercase text-chalk/50">
-                  Level
-                </span>
-                <span className="font-display text-2xl font-extrabold leading-none text-chalk">
-                  3
-                </span>
-              </ProgressRing>
-              <div>
-                <p className="font-display text-xl font-extrabold text-chalk">
-                  420 XP
-                </p>
-                <span className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-amber/20 px-2.5 py-1 font-display text-xs font-semibold text-amber">
-                  <Flame size={13} weight="fill" /> 9-day streak
-                </span>
-              </div>
-            </div>
+          <HeroPreview />
+        </div>
+      </section>
 
-            <div className="mt-5 rounded-2xl border border-teal/40 bg-teal/[0.08] p-4">
-              <div className="flex items-center justify-between">
-                <span className="flex h-6 items-center rounded-full bg-chalk px-2 font-display text-[11px] font-bold text-ink">
-                  #9
-                </span>
-                <CheckCircle size={18} weight="fill" className="text-teal-bright" />
+      {/* Stats band — real course numbers, counting up on scroll */}
+      <section className="border-y border-white/10 bg-ink-soft">
+        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-y-8 px-5 py-12 sm:grid-cols-4 sm:divide-x sm:divide-white/10">
+          {[
+            { value: lessonCount, suffix: "", label: "Lessons, in order" },
+            { value: modelCount, suffix: "", label: "Named models to collect" },
+            { value: 4, suffix: "", label: "Parts, one system" },
+            { icon: true, label: "Lifetime access" },
+          ].map((s, i) => (
+            <div key={i} className="px-2 text-center sm:px-6">
+              <div className="font-display text-5xl font-extrabold tracking-tight text-chalk">
+                {s.icon ? (
+                  <InfinityIcon
+                    size={48}
+                    weight="bold"
+                    className="mx-auto text-teal-bright"
+                  />
+                ) : (
+                  <span className="text-teal-bright">
+                    <CountUp value={s.value as number} suffix={s.suffix} />
+                  </span>
+                )}
               </div>
-              <p className="mt-2 font-display text-sm font-bold text-chalk">
-                Real vs Nominal
-              </p>
-              <p className="prose-money mt-1 text-xs text-chalk/60">
-                Real return = nominal return minus inflation. The most important
-                arithmetic in the course.
+              <p className="mt-2 font-display text-xs font-semibold uppercase tracking-wide text-chalk/50">
+                {s.label}
               </p>
             </div>
+          ))}
+        </div>
+      </section>
 
-            <div className="mt-4 flex flex-wrap gap-2">
-              {[
-                { t: "Scam-Proof", c: "var(--color-pink)" },
-                { t: "Deck Starter", c: "var(--color-amber)", dark: true },
-                { t: "First Step", c: "var(--color-teal)" },
-              ].map((b) => (
-                <span
-                  key={b.t}
-                  className="peel text-[11px]"
-                  style={{
-                    backgroundColor: b.c,
-                    color: b.dark ? "var(--color-ink)" : "#fff",
-                  }}
-                >
-                  {b.t}
-                </span>
-              ))}
-            </div>
-          </div>
+      {/* The 76-model deck — a living marquee of real model names */}
+      <section className="overflow-hidden py-14">
+        <Reveal className="mx-auto max-w-6xl px-5">
+          <p className="font-display text-xs font-semibold uppercase tracking-[0.28em] text-teal-bright">
+            {modelCount} models, all named
+          </p>
+          <h2 className="mt-3 max-w-2xl font-display text-2xl font-extrabold tracking-tight text-chalk sm:text-3xl">
+            Every big idea is a card you collect.
+          </h2>
+        </Reveal>
+        <div className="mt-8">
+          <ModelMarquee items={modelNames} />
         </div>
       </section>
 
@@ -222,14 +237,14 @@ export default function Landing() {
               className={p.span}
             >
               <div
-                className={`flex h-full flex-col rounded-3xl border p-6 ${
+                className={`group flex h-full flex-col rounded-3xl border p-6 transition duration-300 ease-out hover:-translate-y-1 ${
                   p.dark
-                    ? "border-transparent bg-chalk text-ink"
-                    : "border-white/10 bg-ink-soft text-chalk"
+                    ? "border-transparent bg-chalk text-ink hover:shadow-[0_24px_48px_-24px_rgba(0,0,0,0.6)]"
+                    : "border-white/10 bg-ink-soft text-chalk hover:border-teal/40"
                 }`}
               >
                 <span
-                  className="flex h-11 w-11 items-center justify-center rounded-2xl"
+                  className="flex h-11 w-11 items-center justify-center rounded-2xl transition-transform duration-300 ease-out group-hover:-rotate-6 group-hover:scale-110"
                   style={{ backgroundColor: p.color, color: p.dark ? "#151515" : "#fff" }}
                 >
                   <p.Icon size={22} weight="duotone" />
@@ -269,8 +284,8 @@ export default function Landing() {
           <div className="mt-10 grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map((f, i) => (
               <Reveal key={f.title} delay={i * 0.04}>
-                <div className="flex gap-4">
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-teal/15 text-teal-bright">
+                <div className="group flex gap-4">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-teal/15 text-teal-bright transition-transform duration-300 ease-out group-hover:-rotate-6 group-hover:scale-110">
                     <f.Icon size={22} weight="duotone" />
                   </span>
                   <div>
@@ -298,12 +313,14 @@ export default function Landing() {
           <p className="prose-money mx-auto mt-5 max-w-md text-lg text-chalk/70">
             The frameworks last a lifetime. Fifteen lessons, one week at a time.
           </p>
-          <Link
-            href="/signup"
-            className="press mt-8 inline-flex items-center gap-2 rounded-full bg-teal px-8 py-4 font-display font-semibold text-white shadow-lg shadow-teal/20 transition hover:bg-teal-bright"
-          >
-            Create your account <ArrowRight size={17} weight="bold" />
-          </Link>
+          <div className="mt-8 flex justify-center">
+            <MagneticLink
+              href="/signup"
+              className="press inline-flex items-center gap-2 rounded-full bg-teal px-8 py-4 font-display font-semibold text-white shadow-lg shadow-teal/20 transition hover:bg-teal-bright"
+            >
+              Create your account <ArrowRight size={17} weight="bold" />
+            </MagneticLink>
+          </div>
         </Reveal>
       </section>
 
