@@ -8,6 +8,7 @@ import {
   markPaymentSuccess,
 } from "@/lib/access";
 import { chargeGrantsAccess, verifyTransaction } from "@/lib/paystack";
+import { getPaymentSettings } from "@/lib/settings";
 
 /**
  * Paystack redirects the user here after the hosted checkout. We verify the
@@ -22,7 +23,8 @@ export async function GET(req: NextRequest) {
   }
 
   const tx = await verifyTransaction(reference);
-  if (!tx || !chargeGrantsAccess(tx)) {
+  const { priceKobo } = await getPaymentSettings();
+  if (!tx || !chargeGrantsAccess(tx, priceKobo)) {
     return NextResponse.redirect(new URL("/unlock?error=1", req.url));
   }
 

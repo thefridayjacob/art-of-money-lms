@@ -9,12 +9,11 @@ import "server-only";
 const SECRET = process.env.PAYSTACK_SECRET_KEY ?? "";
 const API = "https://api.paystack.co";
 
-/** Course price in kobo (₦1 = 100 kobo). Configure COURSE_PRICE_KOBO in the
- * environment (e.g. 5000000 = ₦50,000). */
-export const COURSE_PRICE_KOBO = Number(process.env.COURSE_PRICE_KOBO ?? 0);
 export const COURSE_CURRENCY = "NGN";
 
-export const paystackConfigured = () => SECRET.length > 0 && COURSE_PRICE_KOBO > 0;
+/** Whether a Paystack secret key is present. The price is a separate concern
+ * (the in-app Payments setting), so callers check that alongside this. */
+export const paystackKeyPresent = () => SECRET.length > 0;
 
 /** Format kobo as a Naira string, e.g. 5000000 → "₦50,000". */
 export function formatNaira(kobo: number): string {
@@ -31,12 +30,14 @@ type InitResult =
 
 export async function initializeTransaction(args: {
   email: string;
+  amountKobo: number;
   reference: string;
   callbackUrl: string;
   metadata?: Record<string, unknown>;
 }): Promise<InitResult> {
-  if (!paystackConfigured())
-    return { ok: false, error: "Payments are not configured yet." };
+  if (!SECRET) return { ok: false, error: "Payments are not configured yet." };
+  if (!(args.amountKobo > 0))
+    return { ok: false, error: "A price hasn’t been set yet." };
 
   try {
     const res = await fetch(`${API}/transaction/initialize`, {
@@ -47,7 +48,7 @@ export async function initializeTransaction(args: {
       },
       body: JSON.stringify({
         email: args.email,
-        amount: COURSE_PRICE_KOBO,
+        amount: args.amountKobo,
         currency: COURSE_CURRENCY,
         reference: args.reference,
         callback_url: args.callbackUrl,
@@ -119,15 +120,15 @@ export async function verifyTransaction(
 }
 
 /** A charge is good enough to grant access: succeeded and paid at least the
- * configured price in the right currency. */
-export function chargeGrantsAccess(t: {
-  status: string;
-  amount: number;
-  currency: string;
-}): boolean {
+ * expected price in the right currency. */
+export function chargeGrantsAccess(
+  t: { status: string; amount: number; currency: string },
+  expectedKobo: number,
+): boolean {
   return (
     t.status === "success" &&
     t.currency === COURSE_CURRENCY &&
-    t.amount >= COURSE_PRICE_KOBO
+    expectedKobo > 0 &&
+    t.amount >= expectedKobo
   );
 }

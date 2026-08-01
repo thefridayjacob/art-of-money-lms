@@ -12,7 +12,7 @@ import { auth, signOut } from "@/auth";
 import { db } from "@/db";
 import { lessons, models } from "@/db/schema";
 import { userHasAccess } from "@/lib/access";
-import { formatNaira, paystackConfigured } from "@/lib/paystack";
+import { formatNaira, paystackKeyPresent } from "@/lib/paystack";
 import { getPaymentSettings, transferConfigured } from "@/lib/settings";
 import { myClaimStatus } from "@/lib/transfer-actions";
 import { PayButton } from "@/components/paywall/PayButton";
@@ -46,6 +46,7 @@ export default async function UnlockPage({
 
   const priceLabel = settings.priceKobo > 0 ? formatNaira(settings.priceKobo) : "—";
   const transferOn = transferConfigured(settings);
+  const paystackOn = paystackKeyPresent() && settings.priceKobo > 0;
 
   const includes = [
     {
@@ -117,7 +118,7 @@ export default async function UnlockPage({
               Get the course{priceLabel !== "—" ? ` · ${priceLabel}` : ""}
               <ArrowUpRight size={18} weight="bold" />
             </a>
-          ) : paystackConfigured() ? (
+          ) : paystackOn ? (
             <PayButton priceLabel={priceLabel} />
           ) : null}
 
@@ -183,7 +184,7 @@ export default async function UnlockPage({
             <RedeemForm />
           </div>
 
-          {!SELAR_URL && !paystackConfigured() && !transferOn && (
+          {!SELAR_URL && !paystackOn && !transferOn && (
             <p className="mt-6 rounded-2xl border border-amber/30 bg-amber/10 px-4 py-3 text-center font-display text-sm text-amber">
               Checkout is being switched on. If you have an access code, enter it
               above.

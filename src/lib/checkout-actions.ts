@@ -6,11 +6,8 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { payments } from "@/db/schema";
 import { newPaymentReference, userHasAccess } from "@/lib/access";
-import {
-  COURSE_PRICE_KOBO,
-  initializeTransaction,
-  paystackConfigured,
-} from "@/lib/paystack";
+import { initializeTransaction, paystackKeyPresent } from "@/lib/paystack";
+import { getPaymentSettings } from "@/lib/settings";
 
 export type CheckoutState = { error?: string } | undefined;
 
@@ -31,19 +28,24 @@ export async function startCheckout(): Promise<CheckoutState> {
   // Already paid (or admin) → straight to the course.
   if (user.isAdmin || (await userHasAccess(user.id))) redirect("/dashboard");
 
-  if (!paystackConfigured())
+  if (!paystackKeyPresent())
     return { error: "Payments aren’t switched on yet. Please check back soon." };
+
+  const { priceKobo } = await getPaymentSettings();
+  if (!(priceKobo > 0))
+    return { error: "A price hasn’t been set yet. Please check back soon." };
 
   const reference = newPaymentReference();
   await db.insert(payments).values({
     reference,
     userId: user.id,
     email: user.email,
-    amount: COURSE_PRICE_KOBO,
+    amount: priceKobo,
   });
 
   const result = await initializeTransaction({
     email: user.email,
+    amountKobo: priceKobo,
     reference,
     callbackUrl: `${await origin()}/api/paystack/callback`,
     metadata: { userId: user.id },

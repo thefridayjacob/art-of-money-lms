@@ -9,6 +9,7 @@ import {
   markPaymentSuccess,
 } from "@/lib/access";
 import { chargeGrantsAccess } from "@/lib/paystack";
+import { getPaymentSettings } from "@/lib/settings";
 
 const SECRET = process.env.PAYSTACK_SECRET_KEY ?? "";
 
@@ -46,12 +47,16 @@ export async function POST(req: NextRequest) {
   const d = event.data;
   const reference = d?.reference;
   if (event.event === "charge.success" && d && reference) {
+    const { priceKobo } = await getPaymentSettings();
     if (
-      chargeGrantsAccess({
-        status: d.status ?? "",
-        amount: d.amount ?? 0,
-        currency: d.currency ?? "",
-      })
+      chargeGrantsAccess(
+        {
+          status: d.status ?? "",
+          amount: d.amount ?? 0,
+          currency: d.currency ?? "",
+        },
+        priceKobo,
+      )
     ) {
       const [row] = await db
         .select({ userId: payments.userId })
