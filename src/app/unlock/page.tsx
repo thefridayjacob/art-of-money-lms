@@ -12,13 +12,13 @@ import { auth, signOut } from "@/auth";
 import { db } from "@/db";
 import { lessons, models } from "@/db/schema";
 import { userHasAccess } from "@/lib/access";
-import {
-  COURSE_PRICE_KOBO,
-  formatNaira,
-  paystackConfigured,
-} from "@/lib/paystack";
+import { formatNaira, paystackConfigured } from "@/lib/paystack";
+import { getPaymentSettings, transferConfigured } from "@/lib/settings";
+import { myClaimStatus } from "@/lib/transfer-actions";
 import { PayButton } from "@/components/paywall/PayButton";
 import { RedeemForm } from "@/components/paywall/RedeemForm";
+import { TransferClaimForm } from "@/components/paywall/TransferClaimForm";
+import { CopyValue } from "@/components/paywall/CopyValue";
 
 const SELAR_URL = process.env.SELAR_PRODUCT_URL ?? "";
 
@@ -36,12 +36,16 @@ export default async function UnlockPage({
 
   const { error, canceled } = await searchParams;
 
-  const [[{ lessonCount }], [{ modelCount }]] = await Promise.all([
-    db.select({ lessonCount: sql<number>`count(*)::int` }).from(lessons),
-    db.select({ modelCount: sql<number>`count(*)::int` }).from(models),
-  ]);
+  const [[{ lessonCount }], [{ modelCount }], settings, claimStatus] =
+    await Promise.all([
+      db.select({ lessonCount: sql<number>`count(*)::int` }).from(lessons),
+      db.select({ modelCount: sql<number>`count(*)::int` }).from(models),
+      getPaymentSettings(),
+      myClaimStatus(),
+    ]);
 
-  const priceLabel = paystackConfigured() ? formatNaira(COURSE_PRICE_KOBO) : "—";
+  const priceLabel = settings.priceKobo > 0 ? formatNaira(settings.priceKobo) : "—";
+  const transferOn = transferConfigured(settings);
 
   const includes = [
     {
@@ -117,6 +121,57 @@ export default async function UnlockPage({
             <PayButton priceLabel={priceLabel} />
           ) : null}
 
+          {/* Bank transfer */}
+          {transferOn && (
+            <div className="mt-6 border-t border-white/10 pt-5">
+              <p className="font-display text-sm font-semibold text-chalk">
+                Pay by bank transfer
+              </p>
+              {claimStatus === "pending" ? (
+                <TransferClaimForm pending />
+              ) : (
+                <>
+                  <div className="mt-3 space-y-2 rounded-2xl bg-white/[0.04] p-4">
+                    {priceLabel !== "—" && (
+                      <Row label="Amount">
+                        <span className="font-display text-base font-bold text-chalk">
+                          {priceLabel}
+                        </span>
+                      </Row>
+                    )}
+                    <Row label="Bank">
+                      <span className="font-display text-base font-semibold text-chalk">
+                        {settings.bankName || "—"}
+                      </span>
+                    </Row>
+                    <Row label="Account no.">
+                      <CopyValue
+                        value={settings.accountNumber}
+                        label="account number"
+                      />
+                    </Row>
+                    <Row label="Account name">
+                      <span className="font-display text-base font-semibold text-chalk">
+                        {settings.accountName || "—"}
+                      </span>
+                    </Row>
+                  </div>
+                  <p className="mt-3 prose-money text-xs text-chalk/50">
+                    {settings.instructions ||
+                      "Transfer the exact amount above, then confirm below. We’ll verify and unlock your access."}
+                  </p>
+                  {claimStatus === "rejected" && (
+                    <p className="mt-2 font-display text-xs text-pink">
+                      Your last transfer couldn’t be confirmed. Please check the
+                      details and submit again.
+                    </p>
+                  )}
+                  <TransferClaimForm pending={false} />
+                </>
+              )}
+            </div>
+          )}
+
           {/* Redeem an access code (after buying) */}
           <div className="mt-6 border-t border-white/10 pt-5">
             <p className="font-display text-sm font-semibold text-chalk">
@@ -128,7 +183,7 @@ export default async function UnlockPage({
             <RedeemForm />
           </div>
 
-          {!SELAR_URL && !paystackConfigured() && (
+          {!SELAR_URL && !paystackConfigured() && !transferOn && (
             <p className="mt-6 rounded-2xl border border-amber/30 bg-amber/10 px-4 py-3 text-center font-display text-sm text-amber">
               Checkout is being switched on. If you have an access code, enter it
               above.
@@ -169,5 +224,20 @@ export default async function UnlockPage({
         </form>
       </div>
     </main>
+  );
+}
+
+function Row({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <span className="font-display text-xs text-chalk/50">{label}</span>
+      {children}
+    </div>
   );
 }

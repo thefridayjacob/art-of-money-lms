@@ -6,6 +6,7 @@ import {
   PencilSimple,
   Users as UsersIcon,
   Ticket,
+  Bank,
 } from "@phosphor-icons/react/dist/ssr";
 import { auth } from "@/auth";
 import { db } from "@/db";
@@ -74,6 +75,24 @@ export default async function AdminPage() {
           </span>
           <span className="font-display text-xs text-muted">
             Generate codes to sell on Selar; buyers redeem to unlock
+          </span>
+        </span>
+        <CaretRight size={16} weight="bold" className="text-muted" />
+      </Link>
+
+      <Link
+        href="/admin/payments"
+        className="press mt-3 flex items-center gap-3 rounded-2xl border border-border bg-card p-4 transition hover:border-teal/50"
+      >
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal/10">
+          <Bank size={18} weight="duotone" className="text-teal" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block font-display text-sm font-semibold text-ink">
+            Payments
+          </span>
+          <span className="font-display text-xs text-muted">
+            Bank-transfer details &amp; confirm transfers to unlock buyers
           </span>
         </span>
         <CaretRight size={16} weight="bold" className="text-muted" />

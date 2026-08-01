@@ -358,6 +358,34 @@ export const accessCodes = pgTable("access_codes", {
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 
+/**
+ * Simple key/value app settings, editable in the admin UI (e.g. bank-transfer
+ * details + price) so they don't need env vars + a redeploy.
+ */
+export const appSettings = pgTable("app_settings", {
+  key: text("key").primaryKey(),
+  value: text("value"),
+  updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
+});
+
+/**
+ * A learner's claim that they paid by bank transfer. An admin approves it to
+ * grant access (or rejects it). Access is never granted by the claim alone.
+ */
+export const transferClaims = pgTable("transfer_claims", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  email: text("email").notNull(),
+  senderName: text("sender_name"),
+  reference: text("reference"),
+  note: text("note"),
+  status: text("status").notNull().default("pending"), // pending | approved | rejected
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  reviewedAt: timestamp("reviewed_at", { mode: "date" }),
+});
+
 /* ------------------------------------------------------------------ *
  * Relations
  * ------------------------------------------------------------------ */
